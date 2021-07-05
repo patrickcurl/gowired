@@ -1,0 +1,35 @@
+{
+  "name": "gowired",
+  "version": "0.0.1",
+  "description": "Livewire / Liveview for golang",
+  "main": "ci/main.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "'test'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/patrickcurl/gowired.git"
+  },
+  "keywords": [
+    "golive",
+    "gowired",
+    "liveview",
+    "livewire"
+  ],
+  "author": "Patrick Curl <patrickwcurl@gmail.com> (https://github.com/patrickcurl)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/patrickcurl/gowired/issues"
+  },
+  "homepage": "https://github.com/patrickcurl/gowired#readme",
+  "devDependencies": {
+    "eslint": "^7.30.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0"
+  }
+}
