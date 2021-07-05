@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 )
 
-type LiveServer struct {
+type WiredServer struct {
 	// Wire ...
 	Wire *LiveWire
 
@@ -18,21 +18,21 @@ type LiveServer struct {
 	Log        Log
 }
 
-type LiveResponse struct {
+type WiredResponse struct {
 	Rendered string
 	Session  string
 }
 
-func NewServer() *LiveServer {
+func NewServer() *WiredServer {
 	logger := NewLoggerBasic()
-	return &LiveServer{
+	return &WiredServer{
 		Wire:       NewWire(),
 		CookieName: "_csrf_token",
 		Log:        logger.Log,
 	}
 }
 
-func (s *LiveServer) HandleFirstRequest(lc *LiveComponent, c PageContent) (*LiveResponse, error) {
+func (s *WiredServer) HandleFirstRequest(lc *WiredComponent, c PageContent) (*WiredResponse, error) {
 	/* Create session to the new user */
 	sessionKey, session, err := s.Wire.CreateSession()
 	if err != nil {
@@ -44,7 +44,7 @@ func (s *LiveServer) HandleFirstRequest(lc *LiveComponent, c PageContent) (*Live
 	session.log = s.Log
 
 	// Instantiate a page to attach to a session
-	p := NewLivePage(lc)
+	p := NewWiredPage(lc)
 
 	// Set page content
 	p.SetContent(c)
@@ -61,21 +61,21 @@ func (s *LiveServer) HandleFirstRequest(lc *LiveComponent, c PageContent) (*Live
 	rendered, err := p.Render()
 
 	if err != nil {
-		return &LiveResponse{
+		return &WiredResponse{
 			Rendered: "<h1> Page with error </h1>",
 			Session:  "",
 		}, err
 	}
 
-	return &LiveResponse{Rendered: rendered, Session: sessionKey}, nil
+	return &WiredResponse{Rendered: rendered, Session: sessionKey}, nil
 }
 
-func (s *LiveServer) HandleHTMLRequest(ctx *fiber.Ctx, lc *LiveComponent, c PageContent) {
+func (s *WiredServer) HandleHTMLRequest(ctx *fiber.Ctx, lc *WiredComponent, c PageContent) {
 
 	lr, err := s.HandleFirstRequest(lc, c)
 
 	if lr == nil {
-		s.Log(LogPanic, "no live page", logEx{"error": err})
+		s.Log(LogPanic, "no wired page", logEx{"error": err})
 		return
 	}
 
@@ -95,7 +95,7 @@ func (s *LiveServer) HandleHTMLRequest(ctx *fiber.Ctx, lc *LiveComponent, c Page
 	ctx.Response().AppendBodyString(lr.Rendered)
 }
 
-func (s *LiveServer) CreateHTMLHandler(f func() *LiveComponent, c PageContent) func(ctx *fiber.Ctx) error {
+func (s *WiredServer) CreateHTMLHandler(f func() *WiredComponent, c PageContent) func(ctx *fiber.Ctx) error {
 	return func(ctx *fiber.Ctx) error {
 		lc := f()
 		lc.log = s.Log
@@ -111,7 +111,7 @@ type HTTPMiddleware func(next HTTPHandlerCtx) HTTPHandlerCtx
 // HTTPHandlerCtx HTTP Handler with a page level context.
 type HTTPHandlerCtx func(ctx *fiber.Ctx, pageCtx context.Context)
 
-func (s *LiveServer) CreateHTMLHandlerWithMiddleware(f func(ctx context.Context) *LiveComponent, content PageContent,
+func (s *WiredServer) CreateHTMLHandlerWithMiddleware(f func(ctx context.Context) *WiredComponent, content PageContent,
 	middlewares ...HTTPMiddleware) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		ctx := context.Background()
@@ -140,7 +140,7 @@ func (s *LiveServer) CreateHTMLHandlerWithMiddleware(f func(ctx context.Context)
 	}
 }
 
-func (s *LiveServer) HandlePollRequest() {
+func (s *WiredServer) HandlePollRequest() {
 	defer func() {
 		payload := recover()
 		if payload != nil {
@@ -149,7 +149,7 @@ func (s *LiveServer) HandlePollRequest() {
 	}()
 }
 
-func (s *LiveServer) HandleWSRequest(c *websocket.Conn) {
+func (s *WiredServer) HandleWSRequest(c *websocket.Conn) {
 	defer func() {
 		payload := recover()
 		if payload != nil {
@@ -169,8 +169,8 @@ func (s *LiveServer) HandleWSRequest(c *websocket.Conn) {
 		s.Log(LogWarn, "session not found", logEx{"session": sessionKey})
 
 		var msg PatchBrowser
-		msg.Type = EventLiveError
-		msg.Message = LiveErrorSessionNotFound
+		msg.Type = EventWiredError
+		msg.Message = WiredErrorSessionNotFound
 		if err := c.WriteJSON(msg); err != nil {
 			s.Log(LogError, "handle ws request: write json", logEx{"error": err})
 		}
@@ -206,7 +206,7 @@ func (s *LiveServer) HandleWSRequest(c *websocket.Conn) {
 					s.Log(LogError, "close websocket connection", logEx{"error": err})
 				}
 
-				if err := session.LivePage.entryComponent.Kill(); err != nil {
+				if err := session.WiredPage.entryComponent.Kill(); err != nil {
 					s.Log(LogError, "handle ws request: kill page", logEx{"error": err})
 				}
 

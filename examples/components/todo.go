@@ -3,7 +3,7 @@ package components
 import (
 	"strings"
 
-	"github.com/brendonmatos/golive"
+	"github.com/patrickcurl/gowired"
 )
 
 type Task struct {
@@ -24,15 +24,15 @@ func (t *Task) GetClasses() string {
 }
 
 type Todo struct {
-	golive.LiveComponentWrapper
+	gowired.LiveComponentWrapper
 	Counter int
 	Text    string
 	Tasks   []Task
 	Name    string
 }
 
-func NewTodo() *golive.LiveComponent {
-	return golive.NewLiveComponent("Todo", &Todo{
+func NewTodo() *gowired.LiveComponent {
+	return gowired.NewLiveComponent("Todo", &Todo{
 		Counter: 0,
 		Name:    "Todo",
 		Text:    "",
@@ -75,15 +75,15 @@ func (t *Todo) CanAdd() bool {
 	return len(t.Text) > 0
 }
 
-func (t *Todo) TemplateHandler(_ *golive.LiveComponent) string {
+func (t *Todo) TemplateHandler(_ *gowired.LiveComponent) string {
 	return `
 		<div id="todo">
-			<input go-live-input="Text" />
-			<button :disabled="{{not .CanAdd}}" go-live-click="HandleAdd">Create</button>
+			<input go-wired-input="Text" />
+			<button :disabled="{{not .CanAdd}}" go-wired-click="HandleAdd">Create</button>
 			<div class="todo-tasks">
 				{{ range $index, $task := .Tasks }}
 					<div class="{{ $task.GetClasses }}" key="{{$index}}">
-						<input type="checkbox" go-live-input="Tasks.{{$index}}.Done"></input>
+						<input type="checkbox" go-wired-input="Tasks.{{$index}}.Done"></input>
 						<span>{{ $task.Text }}</span>
 					</div>
 				{{ end }}

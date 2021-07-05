@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 import (
 	"fmt"
@@ -8,18 +8,18 @@ import (
 )
 
 type Pet struct {
-	LiveComponentWrapper
+	WiredComponentWrapper
 	Name  string
 	Age   int
 	Awake bool
 }
 
-var petComponent = NewLiveComponent("pet", &Pet{
+var petComponent = NewWiredComponent("pet", &Pet{
 	Name: "Catdog",
 	Age:  12,
 })
 
-func TestLiveComponent_GetFieldFromPath(t *testing.T) {
+func TestWiredComponent_GetFieldFromPath(t *testing.T) {
 	field := petComponent.GetFieldFromPath("Name")
 
 	fmt.Printf("%v", field)
@@ -29,7 +29,7 @@ func TestLiveComponent_GetFieldFromPath(t *testing.T) {
 	}
 }
 
-func TestLiveComponent_SetValueInPathWithString(t *testing.T) {
+func TestWiredComponent_SetValueInPathWithString(t *testing.T) {
 	err := petComponent.SetValueInPath("Dog", "Name")
 
 	if err != nil {
@@ -48,7 +48,7 @@ func TestLiveComponent_SetValueInPathWithString(t *testing.T) {
 	}
 }
 
-func TestLiveComponent_SetValueInPathWithNumber(t *testing.T) {
+func TestWiredComponent_SetValueInPathWithNumber(t *testing.T) {
 	err := petComponent.SetValueInPath("10", "Age")
 
 	if err != nil {
@@ -67,7 +67,7 @@ func TestLiveComponent_SetValueInPathWithNumber(t *testing.T) {
 	}
 }
 
-func TestLiveComponent_SetValueInPathWithBoolean(t *testing.T) {
+func TestWiredComponent_SetValueInPathWithBoolean(t *testing.T) {
 	err := petComponent.SetValueInPath("true", "Awake")
 
 	if err != nil {
@@ -82,7 +82,7 @@ func TestLiveComponent_SetValueInPathWithBoolean(t *testing.T) {
 	}
 }
 
-func TestLiveComponent_SetValueInPathWithBoolean2(t *testing.T) {
+func TestWiredComponent_SetValueInPathWithBoolean2(t *testing.T) {
 	err := petComponent.SetValueInPath("false", "Awake")
 
 	if err != nil {
@@ -98,18 +98,18 @@ func TestLiveComponent_SetValueInPathWithBoolean2(t *testing.T) {
 }
 
 type Clock struct {
-	LiveComponentWrapper
+	WiredComponentWrapper
 }
 
-func NewClock() *LiveComponent {
-	return NewLiveComponent("Clock", &Clock{})
+func NewClock() *WiredComponent {
+	return NewWiredComponent("Clock", &Clock{})
 }
 
 func (c *Clock) ActualTime() string {
 	return time.Now().Format(time.RFC3339Nano)
 }
 
-func (c *Clock) Mounted(l *LiveComponent) {
+func (c *Clock) Mounted(l *WiredComponent) {
 	go func() {
 		for {
 			if l.Exited {
@@ -121,7 +121,7 @@ func (c *Clock) Mounted(l *LiveComponent) {
 	}()
 }
 
-func (c *Clock) TemplateHandler(_ *LiveComponent) string {
+func (c *Clock) TemplateHandler(_ *WiredComponent) string {
 	return `
 		<div>
 			<span>Time: {{ .ActualTime }}</span>
@@ -189,10 +189,10 @@ func TestComponent_LifeCycleSequence(t *testing.T) {
 }
 
 type TestComp struct {
-	LiveComponentWrapper
+	WiredComponentWrapper
 }
 
-func (tc *TestComp) TemplateHandler(_ *LiveComponent) string {
+func (tc *TestComp) TemplateHandler(_ *WiredComponent) string {
 	return `
 		<div>
 			<div></div>
@@ -207,7 +207,7 @@ func (tc *TestComp) TemplateHandler(_ *LiveComponent) string {
 
 func TestComponent_ComponentSignTemplate(t *testing.T) {
 	var err error
-	c := NewLiveComponent("Test", &TestComp{})
+	c := NewWiredComponent("Test", &TestComp{})
 	c.log = NewLoggerBasic().Log
 	err = c.Create(nil)
 

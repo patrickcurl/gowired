@@ -9,14 +9,14 @@ import (
 
 func main() {
 	app := fiber.New()
-	liveServer := golive.NewServer()
+	wiredServer := gowired.NewServer()
 
-	app.Get("/", liveServer.CreateHTMLHandler(components.NewForm, golive.PageContent{
+	app.Get("/", wiredServer.CreateHTMLHandler(components.NewForm, gowired.PageContent{
 		Lang:  "us",
 		Title: "Hello world",
 	}))
 
-	app.Get("/ws", websocket.New(liveServer.HandleWSRequest))
+	app.Get("/ws", websocket.New(wiredServer.HandleWSRequest))
 
 	_ = app.Listen(":3000")
 

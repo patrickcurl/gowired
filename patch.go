@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 type PatchInstruction struct {
 	Name     string      `json:"n"`

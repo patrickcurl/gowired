@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 import (
 	"fmt"
@@ -6,21 +6,21 @@ import (
 )
 
 const (
-	EventLiveInput          = "li"
-	EventLiveMethod         = "lm"
-	EventLiveDom            = "ld"
-	EventLiveDisconnect     = "lx"
-	EventLiveError          = "le"
-	EventLiveConnectElement = "lce"
+	EventWiredInput          = "li"
+	EventWiredMethod         = "lm"
+	EventWiredDom            = "ld"
+	EventWiredDisconnect     = "lx"
+	EventWiredError          = "le"
+	EventWiredConnectElement = "lce"
 )
 
 var (
-	LiveErrorSessionNotFound = "session_not_found"
+	WiredErrorSessionNotFound = "session_not_found"
 )
 
-func LiveErrorMap() map[string]string {
+func WiredErrorMap() map[string]string {
 	return map[string]string{
-		"LiveErrorSessionNotFound": LiveErrorSessionNotFound,
+		"WiredErrorSessionNotFound": WiredErrorSessionNotFound,
 	}
 }
 
@@ -47,7 +47,7 @@ const (
 )
 
 type Session struct {
-	LivePage   *Page
+	WiredPage   *Page
 	OutChannel chan PatchBrowser
 	log        Log
 	Status     SessionStatus
@@ -60,23 +60,23 @@ func NewSession() *Session {
 	}
 }
 
-func (s *Session) QueueMessage(message PatchBrowser) {
+func (session *Session) QueueMessage(message PatchBrowser) {
 	go func() {
-		s.OutChannel <- message
+		session.OutChannel <- message
 	}()
 }
 
-func (s *Session) IngestMessage(message BrowserEvent) error {
+func (session *Session) IngestMessage(message BrowserEvent) error {
 
 	defer func() {
 		payload := recover()
 		if payload != nil {
 			// TODO: get session key in log
-			s.log(LogWarn, fmt.Sprintf("ingest message: recover from panic: %v", payload), logEx{"message": message})
+			session.log(LogWarn, fmt.Sprintf("ingest message: recover from panic: %v", payload), logEx{"message": message})
 		}
 	}()
 
-	err := s.LivePage.HandleBrowserEvent(message)
+	err := session.WiredPage.HandleBrowserEvent(message)
 
 	if err != nil {
 		return err
@@ -85,28 +85,28 @@ func (s *Session) IngestMessage(message BrowserEvent) error {
 	return nil
 }
 
-func (s *Session) ActivatePage(lp *Page) {
-	s.LivePage = lp
+func (session *Session) ActivatePage(lp *Page) {
+	session.WiredPage = lp
 
 	// Here is the location that get all the components updates *notified* by
 	// the page!
 	go func() {
 		for {
 			// Receive all the events from page
-			evt := <-s.LivePage.Events
+			evt := <-session.WiredPage.Events
 
-			s.log(LogDebug, fmt.Sprintf("Component %s triggering %d", evt.Component.Name, evt.Type), logEx{"evt": evt})
+			session.log(LogDebug, fmt.Sprintf("Component %s triggering %d", evt.Component.Name, evt.Type), logEx{"evt": evt})
 
 			switch evt.Type {
 			case PageComponentUpdated:
-				if err := s.LiveRenderComponent(evt.Component, evt.Source); err != nil {
-					s.log(LogError, "entryComponent live render", logEx{"error": err})
+				if err := session.WiredRenderComponent(evt.Component, evt.Source); err != nil {
+					session.log(LogError, "entryComponent wired render", logEx{"error": err})
 				}
 				break
 			case PageComponentMounted:
-				s.QueueMessage(PatchBrowser{
+				session.QueueMessage(PatchBrowser{
 					ComponentID:  evt.Component.Name,
-					Type:         EventLiveConnectElement,
+					Type:         EventWiredConnectElement,
 					Instructions: nil,
 				})
 				break
@@ -115,22 +115,22 @@ func (s *Session) ActivatePage(lp *Page) {
 	}()
 }
 
-func (s *Session) generateBrowserPatchesFromDiff(diff *diff, source *EventSource) ([]*PatchBrowser, error) {
+func (session *Session) generateBrowserPatchesFromDiff(diff *diff, source *EventSource) ([]*PatchBrowser, error) {
 
-	bp := make([]*PatchBrowser, 0)
+	patchedBrowser := make([]*PatchBrowser, 0)
 
-	for _, instruction := range diff.instructions {
+	for _, patched := range diff.patches {
 
-		selector, err := selectorFromNode(instruction.element)
-		if skipUpdateValueOnInput(instruction, source) {
+		selector, err := selectorFromNode(patched.element)
+		if skipUpdateValueOnInput(patched, source) {
 			continue
 		}
 
 		if err != nil {
-			return nil, fmt.Errorf("selector from node: %w instruction: %v", err, instruction)
+			return nil, fmt.Errorf("selector from node: %w patched: %v", err, patched)
 		}
 
-		componentID, err := componentIDFromNode(instruction.element)
+		componentID, err := componentIDFromNode(patched.element)
 
 		if err != nil {
 			return nil, err
@@ -139,9 +139,9 @@ func (s *Session) generateBrowserPatchesFromDiff(diff *diff, source *EventSource
 		var patch *PatchBrowser
 
 		// find if there is already a patch
-		for _, pb := range bp {
-			if pb.ComponentID == componentID {
-				patch = pb
+		for _, patchedBrowser := range patchedBrowser {
+			if patchedBrowser.ComponentID == componentID {
+				patch = patchedBrowser
 				break
 			}
 		}
@@ -149,41 +149,41 @@ func (s *Session) generateBrowserPatchesFromDiff(diff *diff, source *EventSource
 		// If there is no patch
 		if patch == nil {
 			patch = NewPatchBrowser(componentID)
-			patch.Type = EventLiveDom
-			bp = append(bp, patch)
+			patch.Type = EventWiredDom
+			patchedBrowser = append(patchedBrowser, patch)
 		}
 
-		patch.AddInstruction(PatchInstruction{
-			Name: EventLiveDom,
-			Type: instruction.changeType.toString(),
+		patch.patchNode(PatchedNode{
+			Name: EventWiredDom,
+			Type: patched.changeType.toString(),
 			Attr: map[string]string{
-				"Name":  instruction.attr.name,
-				"Value": instruction.attr.value,
+				"Name":  patched.attr.name,
+				"Value": patched.attr.value,
 			},
-			Index:    instruction.index,
-			Content:  instruction.content,
+			Index:    patched.index,
+			Content:  patched.content,
 			Selector: selector.toString(),
 		})
 	}
-	return bp, nil
+	return patchedBrowser, nil
 }
 
-func skipUpdateValueOnInput(in changeInstruction, source *EventSource) bool {
-	if in.element == nil || source == nil || in.changeType != SetAttr || strings.ToLower(in.attr.name) != "value" {
+func skipUpdateValueOnInput(updated updateInstruction, source *EventSource) bool {
+	if updated.element == nil || source == nil || updated.updateType != SetAttr || strings.ToLower(updated.attr.name) != "value" {
 		return false
 	}
 
-	attr := getAttribute(in.element, "go-live-input")
+	attr := getAttribute(updated.element, "go-wired-input")
 
 	return attr != nil && source.Type == EventSourceInput && attr.Val == source.Value
 }
 
-// LiveRenderComponent render the updated Component and compare with
+// WiredRenderComponent render the updated Component and compare with
 // last state. It may apply with *all child components*
-func (s *Session) LiveRenderComponent(c *LiveComponent, source *EventSource) error {
+func (s *Session) WiredRenderComponent(c *WiredComponent, source *EventSource) error {
 	var err error
 
-	diff, err := c.LiveRender()
+	diff, err := c.WiredRender()
 
 	if err != nil {
 		return err

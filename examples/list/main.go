@@ -22,7 +22,7 @@ type BooksFilter struct {
 }
 
 type Books struct {
-	golive.LiveComponentWrapper
+	gowired.LiveComponentWrapper
 	Filter BooksFilter
 	List   []Book
 }
@@ -54,8 +54,8 @@ func NewBooks() *Books {
 	}
 }
 
-func NewBooksComponent() *golive.LiveComponent {
-	return golive.NewLiveComponent("Books", NewBooks())
+func NewBooksComponent() *gowired.LiveComponent {
+	return gowired.NewLiveComponent("Books", NewBooks())
 }
 func (b *Books) GetFilteredList() []Book {
 	filtered := make([]Book, 0)
@@ -99,10 +99,10 @@ book:
 	return writers
 }
 
-func (b *Books) TemplateHandler(_ *golive.LiveComponent) string {
+func (b *Books) TemplateHandler(_ *gowired.LiveComponent) string {
 	return `
 		<div>
-			<select go-live-input="Filter.Writer">
+			<select go-wired-input="Filter.Writer">
 				<option value="">No Filter</option>
 				{{ range $index, $writer := .GetWriters }}
 					<option value="{{$writer}}">{{$writer}}</option>
@@ -124,14 +124,14 @@ func (b *Books) TemplateHandler(_ *golive.LiveComponent) string {
 func main() {
 
 	app := fiber.New()
-	liveServer := golive.NewServer()
+	wiredServer := gowired.NewServer()
 
-	app.Get("/", liveServer.CreateHTMLHandler(NewBooksComponent, golive.PageContent{
+	app.Get("/", wiredServer.CreateHTMLHandler(NewBooksComponent, gowired.PageContent{
 		Lang:  "us",
 		Title: "Hello world",
 	}))
 
-	app.Get("/ws", websocket.New(liveServer.HandleWSRequest))
+	app.Get("/ws", websocket.New(wiredServer.HandleWSRequest))
 
 	_ = app.Listen(":3000")
 }

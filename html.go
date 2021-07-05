@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 
 var (
 	ErrCouldNotProvideValidSelector = fmt.Errorf("could not provide a valid selector")
-	ErrElementNotSigned             = fmt.Errorf("element is not signed with go-live-uid")
+	ErrElementNotSigned             = fmt.Errorf("element is not signed with go-wired-uid")
 )
 
 // AttrMapFromNode todo
@@ -142,9 +142,9 @@ func nodeChildrenElements(n *html.Node) []*html.Node {
 	return children
 }
 
-func signLiveUIToSelector(e *html.Node, selector *domElemSelector) bool {
-	if goLiveUidAttr := getAttribute(e, "go-live-uid"); goLiveUidAttr != nil {
-		selector.addAttr("go-live-uid", goLiveUidAttr.Val)
+func signWiredUIToSelector(e *html.Node, selector *domElemSelector) bool {
+	if goWiredUidAttr := getAttribute(e, "go-wired-uid"); goWiredUidAttr != nil {
+		selector.addAttr("go-wired-uid", goWiredUidAttr.Val)
 
 		if keyAttr := getAttribute(e, "key"); keyAttr != nil {
 			selector.addAttr("key", keyAttr.Val)
@@ -168,14 +168,14 @@ func selectorFromNode(e *html.Node) (*domSelector, error) {
 		es := newDOMElementSelector()
 		es.setElemen("*")
 
-		if signLiveUIToSelector(parent, es) {
+		if signWiredUIToSelector(parent, es) {
 			selector.addParentSelector(es)
 		} else {
 			return nil, ErrElementNotSigned
 		}
 
-		if goLiveComponentIDAttr := getAttribute(parent, ComponentIdAttrKey); goLiveComponentIDAttr != nil {
-			es.addAttr(ComponentIdAttrKey, goLiveComponentIDAttr.Val)
+		if goWiredComponentIDAttr := getAttribute(parent, ComponentIdAttrKey); goWiredComponentIDAttr != nil {
+			es.addAttr(ComponentIdAttrKey, goWiredComponentIDAttr.Val)
 			return selector, nil
 		}
 	}
@@ -222,8 +222,8 @@ func addNodeAttribute(e *html.Node, key, value string) {
 	})
 }
 
-func getLiveUidAttributeValue(e *html.Node) (string, bool) {
-	a := getAttribute(e, "go-live-uid")
+func getWiredUidAttributeValue(e *html.Node) (string, bool) {
+	a := getAttribute(e, "go-wired-uid")
 
 	if a == nil {
 		return "", false

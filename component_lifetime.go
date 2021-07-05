@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 type LifeTimeStage int
 
@@ -22,7 +22,7 @@ const (
 
 type ComponentLifeTimeMessage struct {
 	Stage     LifeTimeStage
-	Component *LiveComponent
+	Component *WiredComponent
 	Source    *EventSource
 }
 

@@ -1,19 +1,20 @@
-package golive
+package gowired
 
 import (
 	"fmt"
-	"golang.org/x/net/html"
 	"reflect"
 	"regexp"
 	"runtime/debug"
 	"testing"
 	"time"
+
+	"golang.org/x/net/html"
 )
 
 type diffTest struct {
 	template  string
 	diff      *diff
-	component *LiveComponent
+	component *WiredComponent
 }
 
 type instructionExpect struct {
@@ -25,21 +26,21 @@ type instructionExpect struct {
 }
 
 type diffComponent struct {
-	LiveComponentWrapper
+	WiredComponentWrapper
 	testTemplate string
 	Check        bool
 }
 
-var reSelectGoliveAttr = regexp.MustCompile(`[ ]?go-live-uid="[a-zA-Z0-9_\-]+"`)
+var reSelectGowiredAttr = regexp.MustCompile(`[ ]?go-wired-uid="[a-zA-Z0-9_\-]+"`)
 
-func (l *diffComponent) TemplateHandler(_ *LiveComponent) string {
+func (l *diffComponent) TemplateHandler(_ *WiredComponent) string {
 	return l.testTemplate
 }
 
 func newDiffTest(d diffTest) diffTest {
 	dc := diffComponent{}
 
-	c := NewLiveComponent("testcomp", &dc)
+	c := NewWiredComponent("testcomp", &dc)
 
 	d.component = c
 	c.log = NewLoggerBasic().Log
@@ -53,7 +54,7 @@ func newDiffTest(d diffTest) diffTest {
 
 	dc.Check = true
 
-	df, _ := c.LiveRender()
+	df, _ := c.WiredRender()
 
 	d.diff = df
 
@@ -81,7 +82,7 @@ func (d *diffTest) assert(expectations []instructionExpect, t *testing.T) {
 			if given.changeType != expected.changeType {
 				t.Error("type is different given:", given.changeType, "expeted:", expected.changeType)
 			}
-			a := reSelectGoliveAttr.ReplaceAllString(given.content, "")
+			a := reSelectGowiredAttr.ReplaceAllString(given.content, "")
 
 			if expected.content != nil && a != *expected.content {
 				t.Error("contents are different given:", a, "expeted:", *expected.content)

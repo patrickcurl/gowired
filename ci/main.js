@@ -1,33 +1,34 @@
-const GO_LIVE_CONNECTED = "go-live-connected";
-const GO_LIVE_COMPONENT_ID = "go-live-component-id";
-const EVENT_LIVE_DOM_COMPONENT_ID_KEY = "cid";
-const EVENT_LIVE_DOM_INSTRUCTIONS_KEY = "i";
-const EVENT_LIVE_DOM_TYPE_KEY = "t";
-const EVENT_LIVE_DOM_CONTENT_KEY = "c";
-const EVENT_LIVE_DOM_ATTR_KEY = "a";
-const EVENT_LIVE_DOM_SELECTOR_KEY = "s";
-const EVENT_LIVE_DOM_INDEX_KEY = "i";
+const patched = require('./patched')
+const GO_WIRED_CONNECTED = "go-wired-connected";
+const GO_WIRED_COMPONENT_ID = "go-wired-component-id";
+const EVENT_WIRED_DOM_COMPONENT_ID_KEY = "cid";
+const EVENT_WIRED_DOM_PATCHES_KEY = "i";
+const EVENT_WIRED_DOM_TYPE_KEY = "t";
+const EVENT_WIRED_DOM_CONTENT_KEY = "c";
+const EVENT_WIRED_DOM_ATTR_KEY = "a";
+const EVENT_WIRED_DOM_SELECTOR_KEY = "s";
+const EVENT_WIRED_DOM_INDEX_KEY = "i";
 
-const handleChange = {
-    "{{ .Enum.DiffSetAttr }}": handleDiffSetAttr,
-    "{{ .Enum.DiffRemoveAttr }}": handleDiffRemoveAttr,
-    "{{ .Enum.DiffReplace }}": handleDiffReplace,
-    "{{ .Enum.DiffRemove }}": handleDiffRemove,
-    "{{ .Enum.DiffSetInnerHTML }}": handleDiffSetInnerHTML,
-    "{{ .Enum.DiffAppend }}": handleDiffAppend,
-    "{{ .Enum.DiffMove }}": handleDiffMove,
+const handlePatches= {
+    "{{ .Enum.PatchedSetAttr }}": patched.setAttr,
+    "{{ .Enum.PatchedRemoveAttr }}": patched.removeAttr,
+    "{{ .Enum.PatchedReplace }}": patched.replace,
+    "{{ .Enum.PatchedRemove }}": patched.remove,
+    "{{ .Enum.PatchedAddHTML }}": patched.setInnerHTML,
+    "{{ .Enum.PatchedAppend }}": patched.append,
+    "{{ .Enum.PatchedMove }}": patched.move,
 };
 
-const goLive = {
+const goWired = {
     server: createConnection(),
 
     handlers: [],
 
     once: createOnceEmitter(),
 
-    getLiveComponent(id) {
+    getWiredComponent(id) {
         return document.querySelector(
-            ["*[", GO_LIVE_COMPONENT_ID, "=", id, "]"].join("")
+            ["*[", GO_WIRED_COMPONENT_ID, "=", id, "]"].join("")
         );
     },
 
@@ -54,15 +55,15 @@ const goLive = {
     },
 
     send(message) {
-        goLive.server.send(JSON.stringify(message));
+        goWired.server.send(JSON.stringify(message));
     },
 
     connectChildren(viewElement) {
-        const liveChildren = viewElement.querySelectorAll(
-            "*[" + GO_LIVE_COMPONENT_ID + "]"
+        const wiredChildren = viewElement.querySelectorAll(
+            "*[" + GO_WIRED_COMPONENT_ID + "]"
         );
 
-        liveChildren.forEach((child) => {
+        wiredChildren.forEach((child) => {
             this.connectElement(child);
         });
     },
@@ -80,16 +81,16 @@ const goLive = {
 
         const connectedElements = []
 
-        const clickElements = findLiveClicksFromElement(viewElement);
+        const clickElements = findWiredClicksFromElement(viewElement);
         clickElements.forEach(function (element) {
 
             const componentId = getComponentIdFromElement(element);
 
             element.addEventListener("click", function (_) {
-                goLive.send({
-                    name: "{{ .Enum.EventLiveMethod }}",
+                goWired.send({
+                    name: "{{ .Enum.EventWiredMethod }}",
                     component_id: componentId,
-                    method_name: element.getAttribute("go-live-click"),
+                    method_name: element.getAttribute("go-wired-click"),
                     method_data: dataFromElementAttributes(element),
                 });
             });
@@ -97,18 +98,18 @@ const goLive = {
             connectedElements.push(element)
         });
 
-        const keydownElements = findLiveKeyDownFromElement(viewElement);
+        const keydownElements = findWiredKeyDownFromElement(viewElement);
         keydownElements.forEach(function (element) {
 
             const componentId = getComponentIdFromElement(element);
-            const method = element.getAttribute("go-live-keydown");
+            const method = element.getAttribute("go-wired-keydown");
 
             const attrs = element.attributes;
             let filterKeys = [];
             for (let i = 0; i < attrs.length; i++) {
                 if (
-                    attrs[i].name === "go-live-key" ||
-                    attrs[i].name.startsWith("go-live-key-")
+                    attrs[i].name === "go-wired-key" ||
+                    attrs[i].name.startsWith("go-wired-key-")
                 ) {
                     filterKeys.push(attrs[i].value);
                 }
@@ -130,8 +131,8 @@ const goLive = {
                 }
 
                 if (hit) {
-                    goLive.send({
-                        name: "{{ .Enum.EventLiveMethod }}",
+                        goWired.send({
+                        name: "{{ .Enum.EventWiredMethod }}",
                         component_id: componentId,
                         method_name: method,
                         method_data: dataFromElementAttributes(element),
@@ -145,8 +146,8 @@ const goLive = {
             connectedElements.push(element)
         });
 
-        const liveInputs = findLiveInputsFromElement(viewElement);
-        liveInputs.forEach(function (element) {
+        const wiredInputs = findWiredInputsFromElement(viewElement);
+        wiredInputs.forEach(function (element) {
 
             const type = element.getAttribute("type");
             const componentId = getComponentIdFromElement(element);
@@ -158,10 +159,10 @@ const goLive = {
                     value = element.checked;
                 }
 
-                goLive.send({
-                    name: "{{ .Enum.EventLiveInput }}",
+                goWired.send({
+                    name: "{{ .Enum.EventWiredInput }}",
                     component_id: componentId,
-                    key: element.getAttribute("go-live-input"),
+                    key: element.getAttribute("go-wired-input"),
                     value: String(value),
                 });
             });
@@ -171,27 +172,27 @@ const goLive = {
 
 
         for( const el of connectedElements ) {
-            el.setAttribute(GO_LIVE_CONNECTED, true);
+            el.setAttribute(GO_WIRED_CONNECTED, true);
         }
     },
 
     connect(id) {
-        const element = goLive.getLiveComponent(id);
+        const element = goWired.getWiredComponent(id);
 
-        goLive.connectElement(element);
+        goWired.connectElement(element);
 
-        goLive.on(
-            "{{ .Enum.EventLiveDom }}",
-            function handleLiveDom(message) {
+        goWired.on(
+            "{{ .Enum.EventWiredDom }}",
+            function handleWiredDom(message) {
                 if (id === message[EVENT_LIVE_DOM_COMPONENT_ID_KEY]) {
-                    for (const instruction of message[
-                        EVENT_LIVE_DOM_INSTRUCTIONS_KEY
+                    for (const patched of message[
+                        EVENT_LIVE_DOM_DIFFS_KEY
                         ]) {
-                        const type = instruction[EVENT_LIVE_DOM_TYPE_KEY];
-                        const content = instruction[EVENT_LIVE_DOM_CONTENT_KEY];
-                        const attr = instruction[EVENT_LIVE_DOM_ATTR_KEY];
-                        const selector = instruction[EVENT_LIVE_DOM_SELECTOR_KEY];
-                        const index = instruction[EVENT_LIVE_DOM_INDEX_KEY]
+                        const type = patched[EVENT_LIVE_DOM_TYPE_KEY];
+                        const content = patched[EVENT_LIVE_DOM_CONTENT_KEY];
+                        const attr = patched[EVENT_LIVE_DOM_ATTR_KEY];
+                        const selector = patched[EVENT_LIVE_DOM_SELECTOR_KEY];
+                        const index = patched[EVENT_LIVE_DOM_INDEX_KEY]
 
                         const element = document.querySelector(selector);
 
@@ -200,7 +201,7 @@ const goLive = {
                             return;
                         }
 
-                        handleChange[type](
+                        handlePatches[type](
                             {
                                 content: content,
                                 attr: attr,
@@ -216,34 +217,34 @@ const goLive = {
     },
 };
 
-goLive.once.on("WS_CONNECTION_OPEN", () => {
-    goLive.on("{{ .Enum.EventLiveConnectElement }}", (message) => {
+goWired.once.on("WS_CONNECTION_OPEN", () => {
+    goWired.on("{{ .Enum.EventWiredConnectElement }}", (message) => {
         const cid = message[EVENT_LIVE_DOM_COMPONENT_ID_KEY];
-        goLive.connect(cid);
+        goWired.connect(cid);
     });
-    goLive.on("{{ .Enum.EventLiveError }}", (message) => {
+    goWired.on("{{ .Enum.EventWiredError }}", (message) => {
         console.error("message", message.m)
         if (
             message.m ===
-            '{{ index .EnumLiveError ` + "`LiveErrorSessionNotFound`" + `}}'
+            '{{ index .EnumWiredError ` + "`WiredErrorSessionNotFound`" + `}}'
         ) {
             window.location.reload(false);
         }
     });
 });
 
-goLive.server.onmessage = (rawMessage) => {
+goWired.server.onmessage = (rawMessage) => {
     try {
         const message = JSON.parse(rawMessage.data);
-        goLive.emit(message.t, message);
+        goWired.emit(message.t, message);
     } catch (e) {
         console.log("Error", e);
         console.log("Error message", rawMessage.data);
     }
 };
 
-goLive.server.onopen = () => {
-    goLive.once.emit("WS_CONNECTION_OPEN");
+goWired.server.onopen = () => {
+    goWired.once.emit("WS_CONNECTION_OPEN");
 };
 
 function createConnection() {
@@ -296,21 +297,21 @@ function createOnceEmitter() {
     };
 }
 
-const findLiveInputsFromElement = (el) => {
+const findWiredInputsFromElement = (el) => {
     return el.querySelectorAll(
-        ["*[go-live-input]:not([", GO_LIVE_CONNECTED, "])"].join("")
+        ["*[go-wired-input]:not([", GO_WIRED_CONNECTED, "])"].join("")
     );
 };
 
-const findLiveClicksFromElement = (el) => {
+const findWiredClicksFromElement = (el) => {
     return el.querySelectorAll(
-        ["*[go-live-click]:not([", GO_LIVE_CONNECTED, "])"].join("")
+        ["*[go-wired-click]:not([", GO_WIRED_CONNECTED, "])"].join("")
     );
 };
 
-const findLiveKeyDownFromElement = (el) => {
+const findWiredKeyDownFromElement = (el) => {
     return el.querySelectorAll(
-        ["*[go-live-keydown]:not([", GO_LIVE_CONNECTED, "])"].join("")
+        ["*[go-wired-keydown]:not([", GO_WIRED_CONNECTED, "])"].join("")
     );
 };
 
@@ -318,7 +319,7 @@ const dataFromElementAttributes = (el) => {
     const attrs = el.attributes;
     let data = {};
     for (let i = 0; i < attrs.length; i++) {
-        if (attrs[i].name.startsWith("go-live-data-")) {
+        if (attrs[i].name.startsWith("go-wired-data-")) {
             data[attrs[i].name.substring(13)] = attrs[i].value;
         }
     }
@@ -356,76 +357,8 @@ function isElement(o) {
         typeof o.nodeName === "string";
 }
 
-function handleDiffSetAttr(message, el) {
-    const { attr } = message;
-
-    if (attr.Name === "value" && el.value) {
-        el.value = attr.Value;
-    } else {
-        el.setAttribute(attr.Name, attr.Value);
-    }
-}
-
-function handleDiffRemoveAttr(message, el) {
-    const { attr } = message;
-
-    el.removeAttribute(attr.Name);
-}
-
-function handleDiffReplace(message, el) {
-    const { content } = message;
-
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = content;
-
-    const parent = el.parentElement
-    parent.replaceChild(wrapper.firstChild, el);
-
-    goLive.connectElement(parent)
-}
-
-function handleDiffRemove(message, el) {
-    const parent = el.parentElement
-    parent.removeChild(el);
-}
-
-function handleDiffSetInnerHTML(message, el) {
-    let { content } = message;
-
-    if (content === undefined) {
-        content = "";
-    }
-
-    if (el.nodeType === Node.TEXT_NODE) {
-        el.textContent = content;
-        return;
-    }
-
-    el.innerHTML = content;
-
-    goLive.connectElement(el);
-}
-
-function handleDiffAppend(message, el) {
-    const { content } = message;
-
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = content;
-
-    const child = wrapper.firstChild;
-    el.appendChild(child);
-    goLive.connectElement(el);
-}
-
-function handleDiffMove(message, el) {
-    const parent = el.parentNode
-    parent.removeChild(el)
-
-    const child = getElementChild(parent, message.index)
-    parent.replaceChild(el, child)
-}
 const getComponentIdFromElement = (element) => {
-    const attr = element.getAttribute("go-live-component-id");
+    const attr = element.getAttribute("go-wired-component-id");
     if (attr) {
         return attr;
     }

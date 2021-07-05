@@ -1,8 +1,9 @@
-package golive
+package gowired
 
 import (
-	"golang.org/x/net/html"
 	"strconv"
+
+	"golang.org/x/net/html"
 )
 
 type DiffType int
@@ -77,8 +78,8 @@ func (d *diff) propose(proposed *html.Node) {
 
 func (d *diff) diffNode(actual, proposed *html.Node) {
 
-	uidActual, actualOk := getLiveUidAttributeValue(actual)
-	uidProposed, proposedOk := getLiveUidAttributeValue(proposed)
+	uidActual, actualOk := getWiredUidAttributeValue(actual)
+	uidProposed, proposedOk := getWiredUidAttributeValue(proposed)
 
 	if actualOk && proposedOk && uidActual != uidProposed {
 		content, _ := renderNodeToString(proposed)

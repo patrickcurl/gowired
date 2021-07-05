@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 type LiveWire struct {
 	Sessions WireSessions

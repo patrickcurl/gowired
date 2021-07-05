@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 import (
 	"fmt"

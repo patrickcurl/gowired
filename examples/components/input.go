@@ -1,22 +1,22 @@
 package components
 
-import "github.com/brendonmatos/golive"
+import "github.com/patrickcurl/gowired"
 
 type DynamicInput struct {
-	golive.LiveComponentWrapper
+	gowired.LiveComponentWrapper
 	Label string
 }
 
-func NewDynamicInput() *golive.LiveComponent {
-	return golive.NewLiveComponent("DynamicInput", &DynamicInput{
+func NewDynamicInput() *gowired.LiveComponent {
+	return gowired.NewLiveComponent("DynamicInput", &DynamicInput{
 		Label: "",
 	})
 }
 
-func (d *DynamicInput) TemplateHandler(_ *golive.LiveComponent) string {
+func (d *DynamicInput) TemplateHandler(_ *gowired.LiveComponent) string {
 	return `
 		<div>
-			<input type="string" go-live-input="Label" />
+			<input type="string" go-wired-input="Label" />
 			<span>{{.Label}}</span>
 		</div>
 	`

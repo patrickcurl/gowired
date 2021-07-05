@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 import (
 	"bytes"
@@ -17,11 +17,11 @@ func init() {
 }
 
 type PageEnum struct {
-	EventLiveInput          string
-	EventLiveMethod         string
-	EventLiveDom            string
-	EventLiveConnectElement string
-	EventLiveError          string
+	EventWiredInput          string
+	EventWiredMethod         string
+	EventWiredDom            string
+	EventWiredConnectElement string
+	EventWiredError          string
 	DiffSetAttr             DiffType
 	DiffRemoveAttr          DiffType
 	DiffReplace             DiffType
@@ -31,23 +31,23 @@ type PageEnum struct {
 	DiffMove                DiffType
 }
 
-type LivePageEvent struct {
+type WiredPageEvent struct {
 	Type      int
-	Component *LiveComponent
+	Component *WiredComponent
 	Source    *EventSource
 }
 
-type LiveEventsChannel chan LivePageEvent
+type WiredEventsChannel chan WiredPageEvent
 
 type Page struct {
 	content             PageContent
-	Events              LiveEventsChannel
+	Events              WiredEventsChannel
 	ComponentsLifeCycle *ComponentLifeCycle
 
-	entryComponent *LiveComponent
+	entryComponent *WiredComponent
 
 	// Components is a list that handle all the components from the page
-	Components map[string]*LiveComponent
+	Components map[string]*WiredComponent
 }
 
 type PageContent struct {
@@ -57,18 +57,18 @@ type PageContent struct {
 	Script        string
 	Title         string
 	Enum          PageEnum
-	EnumLiveError map[string]string
+	EnumWiredError map[string]string
 }
 
-func NewLivePage(c *LiveComponent) *Page {
+func NewWiredPage(c *WiredComponent) *Page {
 	componentsUpdatesChannel := make(ComponentLifeCycle)
-	pageEventsChannel := make(LiveEventsChannel)
+	pageEventsChannel := make(WiredEventsChannel)
 
 	return &Page{
 		entryComponent:      c,
 		Events:              pageEventsChannel,
 		ComponentsLifeCycle: &componentsUpdatesChannel,
-		Components:          make(map[string]*LiveComponent),
+		Components:          make(map[string]*WiredComponent),
 	}
 }
 
@@ -82,7 +82,7 @@ func (lp *Page) Mount() {
 	// Enable components lifecycle channel receiver
 	lp.enableComponentLifeCycleReceiver()
 
-	// pass mount live Component with lifecycle channel
+	// pass mount wired Component with lifecycle channel
 	err := lp.entryComponent.Create(lp.ComponentsLifeCycle)
 
 	if err != nil {
@@ -107,11 +107,11 @@ func (lp *Page) Render() (string, error) {
 	// Body content
 	lp.content.Body = template.HTML(rendered)
 	lp.content.Enum = PageEnum{
-		EventLiveInput:          EventLiveInput,
-		EventLiveMethod:         EventLiveMethod,
-		EventLiveDom:            EventLiveDom,
-		EventLiveError:          EventLiveError,
-		EventLiveConnectElement: EventLiveConnectElement,
+		EventWiredInput:          EventWiredInput,
+		EventWiredMethod:         EventWiredMethod,
+		EventWiredDom:            EventWiredDom,
+		EventWiredError:          EventWiredError,
+		EventWiredConnectElement: EventWiredConnectElement,
 		DiffSetAttr:             SetAttr,
 		DiffRemoveAttr:          RemoveAttr,
 		DiffReplace:             Replace,
@@ -120,23 +120,23 @@ func (lp *Page) Render() (string, error) {
 		DiffAppend:              Append,
 		DiffMove:                Move,
 	}
-	lp.content.EnumLiveError = LiveErrorMap()
+	lp.content.EnumWiredError = WiredErrorMap()
 
 	writer := bytes.NewBuffer([]byte{})
 	err = BasePage.Execute(writer, lp.content)
 	return writer.String(), err
 }
 
-func (lp *Page) Emit(lts int, c *LiveComponent) {
+func (lp *Page) Emit(lts int, c *WiredComponent) {
 	lp.EmitWithSource(lts, c, nil)
 }
 
-func (lp *Page) EmitWithSource(lts int, c *LiveComponent, source *EventSource) {
+func (lp *Page) EmitWithSource(lts int, c *WiredComponent, source *EventSource) {
 	if c == nil {
 		c = lp.entryComponent
 	}
 
-	lp.Events <- LivePageEvent{
+	lp.Events <- WiredPageEvent{
 		Type:      lts,
 		Component: c,
 		Source:    source,
@@ -155,12 +155,12 @@ func (lp *Page) HandleBrowserEvent(m BrowserEvent) error {
 
 	var err error
 	switch m.Name {
-	case EventLiveInput:
+	case EventWiredInput:
 		err = c.SetValueInPath(m.StateValue, m.StateKey)
 		source = &EventSource{Type: EventSourceInput, Value: m.StateKey}
-	case EventLiveMethod:
+	case EventWiredMethod:
 		err = c.InvokeMethodInPath(m.MethodName, m.MethodData, m.DOMEvent)
-	case EventLiveDisconnect:
+	case EventWiredDisconnect:
 		err = c.Kill()
 	}
 

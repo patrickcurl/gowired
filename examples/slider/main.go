@@ -3,20 +3,20 @@ package main
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
-	golive "github.com/patrickcurl/gowired"
+	"github.com/patrickcurl/gowired"
 	"github.com/patrickcurl/gowired/examples/components"
 )
 
 func main() {
 	app := fiber.New()
-	liveServer := golive.NewServer()
+	wiredServer := gowired.NewServer()
 
-	app.Get("/", liveServer.CreateHTMLHandler(components.NewSlider, golive.PageContent{
+	app.Get("/", wiredServer.CreateHTMLHandler(components.NewSlider, gowired.PageContent{
 		Lang:  "us",
 		Title: "Hello world",
 	}))
 
-	app.Get("/ws", websocket.New(liveServer.HandleWSRequest))
+	app.Get("/ws", websocket.New(wiredServer.HandleWSRequest))
 
 	_ = app.Listen(":3000")
 

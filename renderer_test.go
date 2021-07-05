@@ -1,1 +1,1 @@
-package golive
+package gowired

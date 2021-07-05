@@ -3,7 +3,7 @@ module github.com/patrickcurl/gowired
 go 1.15
 
 require (
-	github.com/patrickcurl/gowired v0.0.4
+	github.com/patrickcurl/gowired v0.0.1
 	github.com/gofiber/fiber/v2 v2.2.3
 	github.com/gofiber/websocket/v2 v2.0.2
 	github.com/logrusorgru/aurora/v3 v3.0.0

@@ -3,16 +3,16 @@ package components
 import (
 	"time"
 
-	"github.com/brendonmatos/golive"
+	"github.com/patrickcurl/gowired"
 )
 
 type Clock struct {
-	golive.LiveComponentWrapper
+	gowired.LiveComponentWrapper
 	ActualTime string
 }
 
-func NewClock() *golive.LiveComponent {
-	return golive.NewLiveComponent("Clock", &Clock{
+func NewClock() *gowired.LiveComponent {
+	return gowired.NewLiveComponent("Clock", &Clock{
 		ActualTime: formattedActualTime(),
 	})
 }
@@ -21,7 +21,7 @@ func formattedActualTime() string {
 	return time.Now().Format(time.RFC3339Nano)
 }
 
-func (c *Clock) Mounted(l *golive.LiveComponent) {
+func (c *Clock) Mounted(l *gowired.LiveComponent) {
 	go func() {
 		for {
 			if l.Exited {
@@ -34,7 +34,7 @@ func (c *Clock) Mounted(l *golive.LiveComponent) {
 	}()
 }
 
-func (c *Clock) TemplateHandler(_ *golive.LiveComponent) string {
+func (c *Clock) TemplateHandler(_ *gowired.LiveComponent) string {
 	return `
 		<div>
 			<span>Time: {{ .ActualTime }}</span>

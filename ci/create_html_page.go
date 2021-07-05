@@ -21,7 +21,7 @@ func main() {
 
 	code := []string{"var BasePageString = `", finalHtml, "`"}
 	contents := []string{
-		"package golive",
+		"package gowired",
 		"// Code automatically generated. DO NOT EDIT.",
 		"// > go run ci/create_html_page.go",
 		strings.Join(code, ""),

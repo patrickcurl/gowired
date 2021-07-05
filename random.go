@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 import (
 	"crypto/rand"
@@ -13,7 +13,7 @@ type Random struct {
 var instantiated *Random
 var once sync.Once
 
-func NewLiveID() *Random {
+func NewWiredID() *Random {
 	once.Do(func() {
 		instantiated = &Random{}
 	})

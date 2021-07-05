@@ -1,34 +1,34 @@
-package golive
+package gowired
 
-// LiveComponentWrapper is a struct
-type LiveComponentWrapper struct {
+// WiredComponentWrapper is a struct
+type WiredComponentWrapper struct {
 	Name      string
-	Component *LiveComponent
+	Component *WiredComponent
 }
 
-func (l *LiveComponentWrapper) Create(lc *LiveComponent) {
+func (l *WiredComponentWrapper) Create(lc *WiredComponent) {
 	l.Component = lc
 }
 
 // TemplateHandler ...
-func (l *LiveComponentWrapper) TemplateHandler(_ *LiveComponent) string {
+func (l *WiredComponentWrapper) TemplateHandler(_ *WiredComponent) string {
 	return "<div></div>"
 }
 
 // BeforeMount the Component loading html
-func (l *LiveComponentWrapper) BeforeMount(_ *LiveComponent) {
+func (l *WiredComponentWrapper) BeforeMount(_ *WiredComponent) {
 }
 
 // BeforeMount the Component loading html
-func (l *LiveComponentWrapper) Mounted(_ *LiveComponent) {
+func (l *WiredComponentWrapper) Mounted(_ *WiredComponent) {
 }
 
 // BeforeUnmount before we kill the Component
-func (l *LiveComponentWrapper) BeforeUnmount(_ *LiveComponent) {
+func (l *WiredComponentWrapper) BeforeUnmount(_ *WiredComponent) {
 }
 
 // Commit puts an boolean to the commit channel and notifies who is listening
-func (l *LiveComponentWrapper) Commit() {
+func (l *WiredComponentWrapper) Commit() {
 	l.Component.log(LogTrace, "Updated", logEx{"name": l.Component.Name})
 
 	if l.Component.life == nil {

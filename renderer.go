@@ -1,4 +1,4 @@
-package golive
+package gowired
 
 import (
 	"bytes"
@@ -8,75 +8,75 @@ import (
 	"golang.org/x/net/html"
 )
 
-type LiveState struct {
+type WiredState struct {
 	html *html.Node
 	text string
 }
 
-func (ls *LiveState) setText(text string) error {
+func (state *WiredState) setText(text string) error {
 	var err error
-	ls.html, err = nodeFromString(text)
-	ls.text = text
+	state.html, err = nodeFromString(text)
+	state.text = text
 	return err
 }
 
-func (ls *LiveState) setHTML(node *html.Node) error {
+func (state *WiredState) setHTML(node *html.Node) error {
 	var err error
-	ls.text, err = renderInnerHTML(node)
-	ls.html = node
+	state.text, err = renderInnerHTML(node)
+	state.html = node
 	return err
 }
 
-type LiveRenderer struct {
-	state          *LiveState
+type WiredRenderer struct {
+	state          *WiredState
 	template       *template.Template
 	templateString string
 	formatters     []func(t string) string
 }
 
-func (lr *LiveRenderer) setTemplate(t *template.Template, ts string) {
-	lr.template = t
-	lr.templateString = ts
+func (renderer *WiredRenderer) setTemplate(t *template.Template, ts string) {
+	renderer.template = t
+	renderer.templateString = ts
 }
 
-func (lr *LiveRenderer) renderToText(data interface{}) (string, error) {
-	if lr.template == nil {
-		return "", fmt.Errorf("template is not defined in LiveRenderer")
+func (renderer *WiredRenderer) renderToText(data interface{}) (string, error) {
+	if renderer.template == nil {
+		return "", fmt.Errorf("template is not defined in WiredRenderer")
 	}
 
 	s := bytes.NewBufferString("")
 
-	err := lr.template.Execute(s, data)
+	err := renderer.template.Execute(s, data)
 
 	if err != nil {
 		err = fmt.Errorf("template execute: %w", err)
 	}
 
 	text := s.String()
-	for _, f := range lr.formatters {
+	for _, f := range renderer.formatters {
 		text = f(text)
 	}
 
 	return text, err
 }
 
-func (lr *LiveRenderer) Render(data interface{}) (string, *html.Node, error) {
+func (renderer *WiredRenderer) Render(data interface{}) (string, *html.Node, error) {
 
-	textRender, err := lr.renderToText(data)
+	textRender, err := renderer.renderToText(data)
 	if err != nil {
 		return "", nil, err
 	}
 
-	err = lr.state.setText(textRender)
-	return lr.state.text, lr.state.html, err
+	err = renderer.state.setText(textRender)
+	return renderer.state.text, renderer.state.html, err
 }
 
-func (lr *LiveRenderer) LiveRender(data interface{}) (*diff, error) {
+func (renderer *WiredRenderer) WiredRender(data interface{}) (*diff, error) {
 
-	actualRender := lr.state.html
-	proposedRenderText, err := lr.renderToText(data)
+	actualRender := renderer.state.html
+	proposedRenderText, err := renderer.renderToText(data)
 
-	err = lr.state.setText(proposedRenderText)
+	err = renderer.state.setText(proposedRenderText)
 
 	if err != nil {
 		return nil, fmt.Errorf("state set text: %w", err)
@@ -84,11 +84,11 @@ func (lr *LiveRenderer) LiveRender(data interface{}) (*diff, error) {
 
 	// TODO: maybe the right way to call a diff is calling based on state
 	diff := newDiff(actualRender)
-	diff.propose(lr.state.html)
+	diff.propose(renderer.state.html)
 
 	return diff, nil
 }
 
-func (lr *LiveRenderer) useFormatter(f func(t string) string) {
-	lr.formatters = append(lr.formatters, f)
+func (renderer *WiredRenderer) useFormatter(f func(t string) string) {
+	renderer.formatters = append(renderer.formatters, f)
 }
