@@ -3,19 +3,19 @@ package components
 import "github.com/patrickcurl/gowired"
 
 type Form struct {
-	gowired.LiveComponentWrapper
+	gowired.WiredComponentWrapper
 	Label        string
-	DynamicInput *gowired.LiveComponent
+	DynamicInput *gowired.WiredComponent
 }
 
-func NewForm() *gowired.LiveComponent {
-	return gowired.NewLiveComponent("Form", &Form{
+func NewForm() *gowired.WiredComponent {
+	return gowired.NewWiredComponent("Form", &Form{
 		Label:        "",
 		DynamicInput: NewDynamicInput(),
 	})
 }
 
-func (d *Form) TemplateHandler(_ *gowired.LiveComponent) string {
+func (d *Form) TemplateHandler(_ *gowired.WiredComponent) string {
 	return `<div>
 		{{ render .DynamicInput }}
 	</div>`

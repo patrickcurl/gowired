@@ -10,25 +10,25 @@ import (
 )
 
 type Home struct {
-	gowired.LiveComponentWrapper
-	Clock  *gowired.LiveComponent
-	Todo   *gowired.LiveComponent
-	Slider *gowired.LiveComponent
+	gowired.WiredComponentWrapper
+	Clock  *gowired.WiredComponent
+	Todo   *gowired.WiredComponent
+	Slider *gowired.WiredComponent
 }
 
-func NewHome() *gowired.LiveComponent {
-	return gowired.NewLiveComponent("Home", &Home{
+func NewHome() *gowired.WiredComponent {
+	return gowired.NewWiredComponent("Home", &Home{
 		Clock:  components.NewClock(),
 		Todo:   components.NewTodo(),
 		Slider: components.NewSlider(),
 	})
 }
 
-func (h *Home) Mounted(_ *gowired.LiveComponent) {
+func (h *Home) Mounted(_ *gowired.WiredComponent) {
 	return
 }
 
-func (h *Home) TemplateHandler(_ *gowired.LiveComponent) string {
+func (h *Home) TemplateHandler(_ *gowired.WiredComponent) string {
 	return `
 	<div>
 		{{render .Clock}}
@@ -48,7 +48,7 @@ func main() {
 	}))
 
 	app.Get("/ws", websocket.New(wiredServer.HandleWSRequest))
-	app.get("/", )
+	// app.get("/", )
 	fmt.Println(app.Listen(":3000"))
 
 }

@@ -3,12 +3,12 @@ package components
 import "github.com/patrickcurl/gowired"
 
 type Slider struct {
-	gowired.LiveComponentWrapper
+	gowired.WiredComponentWrapper
 	Size float32
 }
 
-func NewSlider() *gowired.LiveComponent {
-	return gowired.NewLiveComponent("Slider", &Slider{
+func NewSlider() *gowired.WiredComponent {
+	return gowired.NewWiredComponent("Slider", &Slider{
 		Size: 40,
 	})
 }
@@ -21,7 +21,7 @@ func (t *Slider) Size3() float32 {
 	return t.Size * t.Size * 0.3
 }
 
-func (t *Slider) TemplateHandler(_ *gowired.LiveComponent) string {
+func (t *Slider) TemplateHandler(_ *gowired.WiredComponent) string {
 	return `
 		<div>
 			<input go-wired-input="Size" type="range" value="{{.Size}}"/>

@@ -71,7 +71,7 @@ func (renderer *WiredRenderer) Render(data interface{}) (string, *html.Node, err
 	return renderer.state.text, renderer.state.html, err
 }
 
-func (renderer *WiredRenderer) WiredRender(data interface{}) (*diff, error) {
+func (renderer *WiredRenderer) WiredRender(data interface{}) (*patches, error) {
 
 	actualRender := renderer.state.html
 	proposedRenderText, err := renderer.renderToText(data)
@@ -83,10 +83,10 @@ func (renderer *WiredRenderer) WiredRender(data interface{}) (*diff, error) {
 	}
 
 	// TODO: maybe the right way to call a diff is calling based on state
-	diff := newDiff(actualRender)
-	diff.propose(renderer.state.html)
+	changed := updateNode(actualRender)
+	changed.propose(renderer.state.html)
 
-	return diff, nil
+	return changed, nil
 }
 
 func (renderer *WiredRenderer) useFormatter(f func(t string) string) {

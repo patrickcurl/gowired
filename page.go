@@ -22,13 +22,13 @@ type PageEnum struct {
 	EventWiredDom            string
 	EventWiredConnectElement string
 	EventWiredError          string
-	DiffSetAttr             DiffType
-	DiffRemoveAttr          DiffType
-	DiffReplace             DiffType
-	DiffRemove              DiffType
-	DiffSetInnerHTML        DiffType
-	DiffAppend              DiffType
-	DiffMove                DiffType
+	NodeSetAttr             ChangeType
+	NodeRemoveAttr          ChangeType
+	NodeReplace             ChangeType
+	NodeRemove              ChangeType
+	NodeSetInnerHTML        ChangeType
+	NodeAppend              ChangeType
+	NodeMove                ChangeType
 }
 
 type WiredPageEvent struct {
@@ -112,13 +112,13 @@ func (lp *Page) Render() (string, error) {
 		EventWiredDom:            EventWiredDom,
 		EventWiredError:          EventWiredError,
 		EventWiredConnectElement: EventWiredConnectElement,
-		DiffSetAttr:             SetAttr,
-		DiffRemoveAttr:          RemoveAttr,
-		DiffReplace:             Replace,
-		DiffRemove:              Remove,
-		DiffSetInnerHTML:        SetInnerHTML,
-		DiffAppend:              Append,
-		DiffMove:                Move,
+		NodeSetAttr:             SetAttr,
+		NodeRemoveAttr:          RemoveAttr,
+		NodeReplace:             Replace,
+		NodeRemove:              Remove,
+		NodeSetInnerHTML:        SetInnerHTML,
+		NodeAppend:              Append,
+		NodeMove:                Move,
 	}
 	lp.content.EnumWiredError = WiredErrorMap()
 
