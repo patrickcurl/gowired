@@ -6,14 +6,14 @@ import (
 	"golang.org/x/net/html"
 )
 
-type DiffType int
+type ChangeType int
 
-func (dt DiffType) toString() string {
-	return strconv.Itoa(int(dt))
+func (ct ChangeType) toString() string {
+	return strconv.Itoa(int(ct))
 }
 
 const (
-	Append DiffType = iota
+	Append ChangeType = iota
 	Remove
 	SetInnerHTML
 	SetAttr
@@ -22,8 +22,8 @@ const (
 	Move
 )
 
-type changeInstruction struct {
-	changeType DiffType
+type node struct {
+	changeType ChangeType
 	element    *html.Node
 	content    string
 	attr       attrChange
@@ -36,24 +36,24 @@ type attrChange struct {
 	value string
 }
 
-type diff struct {
+type patches struct {
 	actual       *html.Node
-	instructions []changeInstruction
+	updates []node
 	quantity     int
 	doneElements []*html.Node
 }
 
-func newDiff(actual *html.Node) *diff {
-	return &diff{
+func updateNode(actual *html.Node) *patches {
+	return &patches{
 		actual:       actual,
-		instructions: make([]changeInstruction, 0),
+		updates: make([]node, 0),
 	}
 }
 
-func (d *diff) instructionsByType(t DiffType) []changeInstruction {
-	s := make([]changeInstruction, 0)
+func (p *patches) updatesByType(t ChangeType) []node {
+	s := make([]node, 0)
 
-	for _, i := range d.instructions {
+	for _, i := range p.updates {
 		if i.changeType == t {
 			s = append(s, i)
 		}
@@ -62,28 +62,28 @@ func (d *diff) instructionsByType(t DiffType) []changeInstruction {
 	return s
 }
 
-func (d *diff) checkpoint() {
-	d.quantity = len(d.instructions)
+func (p *patches) checkpoint() {
+	p.quantity = len(p.updates)
 }
 
 // Has changed since last checkpoint
-func (d *diff) hasChanged() bool {
-	return len(d.instructions) != d.quantity
+func (p *patches) hasChanged() bool {
+	return len(p.updates) != p.quantity
 }
 
-func (d *diff) propose(proposed *html.Node) {
-	d.clearMarked()
-	d.diffNode(d.actual, proposed)
+func (p *patches) propose(proposed *html.Node) {
+	p.clearMarked()
+	p.updateNode(p.actual, proposed)
 }
 
-func (d *diff) diffNode(actual, proposed *html.Node) {
+func (p *patches) updateNode(actual, proposed *html.Node) {
 
 	uidActual, actualOk := getWiredUidAttributeValue(actual)
 	uidProposed, proposedOk := getWiredUidAttributeValue(proposed)
 
 	if actualOk && proposedOk && uidActual != uidProposed {
 		content, _ := renderNodeToString(proposed)
-		d.instructions = append(d.instructions, changeInstruction{
+		p.updates = append(p.updates, node{
 			changeType: Replace,
 			element:    actual,
 			content:    content,
@@ -91,21 +91,21 @@ func (d *diff) diffNode(actual, proposed *html.Node) {
 		return
 	}
 
-	d.diffNodeAttributes(actual, proposed)
-	d.diffWalk(actual.FirstChild, proposed.FirstChild)
-	d.markNodeDone(proposed)
+	p.updateNodeAttributes(actual, proposed)
+	p.nodeWalk(actual.FirstChild, proposed.FirstChild)
+	p.markNodeDone(proposed)
 }
 
-func (d *diff) clearMarked() {
-	d.doneElements = make([]*html.Node, 0)
+func (p *patches) clearMarked() {
+	p.doneElements = make([]*html.Node, 0)
 }
 
-func (d *diff) markNodeDone(node *html.Node) {
-	d.doneElements = append(d.doneElements, node)
+func (p *patches) markNodeDone(node *html.Node) {
+	p.doneElements = append(p.doneElements, node)
 }
 
-func (d *diff) isMarked(node *html.Node) bool {
-	for _, n := range d.doneElements {
+func (p *patches) isMarked(node *html.Node) bool {
+	for _, n := range p.doneElements {
 		if n == node {
 			return true
 		}
@@ -114,60 +114,60 @@ func (d *diff) isMarked(node *html.Node) bool {
 	return false
 }
 
-func (d *diff) diffWalk(actual, proposed *html.Node) {
+func (p *patches) nodeWalk(actual, proposed *html.Node) {
 
 	if actual == nil && proposed == nil {
 		return
 	}
 
 	if nodeIsText(actual) || nodeIsText(proposed) {
-		d.checkpoint()
-		d.diffTextNode(actual, proposed)
-		if d.hasChanged() {
+		p.checkpoint()
+		p.updateTextNode(actual, proposed)
+		if p.hasChanged() {
 			return
 		}
 	}
 
 	if actual != nil && proposed != nil {
-		d.diffNode(actual, proposed)
+		p.updateNode(actual, proposed)
 	} else if actual == nil && nodeIsElement(proposed) {
 		nodeContent, _ := renderNodeToString(proposed)
-		d.instructions = append(d.instructions, changeInstruction{
+		p.updates = append(p.updates, node{
 			changeType: Append,
 			element:    proposed.Parent,
 			content:    nodeContent,
 		})
-		d.markNodeDone(proposed)
+		p.markNodeDone(proposed)
 	} else if proposed == nil && nodeIsElement(actual) {
-		d.instructions = append(d.instructions, changeInstruction{
+		p.updates = append(p.updates, node{
 			changeType: Remove,
 			element:    actual,
 		})
-		d.markNodeDone(actual)
+		p.markNodeDone(actual)
 	}
 
 	nextActual := nextRelevantElement(actual)
 	nextProposed := nextRelevantElement(proposed)
 
 	if nextActual != nil || nextProposed != nil {
-		d.diffWalk(nextActual, nextProposed)
+		p.nodeWalk(nextActual, nextProposed)
 	}
 }
 
-func (d *diff) forceRenderElementContent(proposed *html.Node) {
+func (p *patches) forceRenderElementContent(proposed *html.Node) {
 	childrenHTML, _ := renderInnerHTML(proposed)
 
-	d.instructions = append(d.instructions, changeInstruction{
+	p.updates = append(p.updates, node{
 		changeType: SetInnerHTML,
 		content:    childrenHTML,
 		element:    proposed,
 	})
 }
 
-// diffNodeAttributes compares the attributes in el to the attributes in otherEl
+// patchNodeAttributes compares the attributes in el to the attributes in otherEl
 // and adds the necessary patches to make the attributes in el match those in
 // otherEl
-func (d *diff) diffNodeAttributes(actual, proposed *html.Node) {
+func (p *patches) updateNodeAttributes(actual, proposed *html.Node) {
 
 	actualAttrs := AttrMapFromNode(actual)
 	proposedAttrs := AttrMapFromNode(proposed)
@@ -176,7 +176,7 @@ func (d *diff) diffNodeAttributes(actual, proposed *html.Node) {
 	for name, otherValue := range proposedAttrs {
 		value, found := actualAttrs[name]
 		if !found || value != otherValue {
-			d.instructions = append(d.instructions, changeInstruction{
+			p.updates = append(p.updates, node{
 				changeType: SetAttr,
 				element:    actual,
 				attr: attrChange{
@@ -190,7 +190,7 @@ func (d *diff) diffNodeAttributes(actual, proposed *html.Node) {
 	for attrName := range actualAttrs {
 		if _, found := proposedAttrs[attrName]; !found {
 
-			d.instructions = append(d.instructions, changeInstruction{
+			p.updates = append(p.updates, node{
 				changeType: RemoveAttr,
 				element:    actual,
 				attr: attrChange{
@@ -201,7 +201,7 @@ func (d *diff) diffNodeAttributes(actual, proposed *html.Node) {
 	}
 }
 
-func (d *diff) diffTextNode(actual, proposed *html.Node) {
+func (p *patches) updateTextNode(actual, proposed *html.Node) {
 
 	// Any node is text
 	if !nodeIsText(proposed) && !nodeIsText(actual) {
@@ -239,8 +239,8 @@ renderEntireNode:
 			return
 		}
 
-		d.forceRenderElementContent(node.Parent)
-		d.markNodeDone(node.Parent)
+		p.forceRenderElementContent(node.Parent)
+		p.markNodeDone(node.Parent)
 	}
 
 }

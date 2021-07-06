@@ -1,4 +1,4 @@
-const patched = require('./patched')
+const node = require('./patched.js');
 const GO_WIRED_CONNECTED = "go-wired-connected";
 const GO_WIRED_COMPONENT_ID = "go-wired-component-id";
 const EVENT_WIRED_DOM_COMPONENT_ID_KEY = "cid";
@@ -10,13 +10,13 @@ const EVENT_WIRED_DOM_SELECTOR_KEY = "s";
 const EVENT_WIRED_DOM_INDEX_KEY = "i";
 
 const handlePatches= {
-    "{{ .Enum.PatchedSetAttr }}": patched.setAttr,
-    "{{ .Enum.PatchedRemoveAttr }}": patched.removeAttr,
-    "{{ .Enum.PatchedReplace }}": patched.replace,
-    "{{ .Enum.PatchedRemove }}": patched.remove,
-    "{{ .Enum.PatchedAddHTML }}": patched.setInnerHTML,
-    "{{ .Enum.PatchedAppend }}": patched.append,
-    "{{ .Enum.PatchedMove }}": patched.move,
+    "{{ .Enum.NodeSetAttr }}": node.setAttr,
+    "{{ .Enum.NodeRemoveAttr }}": node.removeAttr,
+    "{{ .Enum.NodeReplace }}": node.replace,
+    "{{ .Enum.NodeRemove }}": node.remove,
+    "{{ .Enum.NodeAddHTML }}": node.setInnerHTML,
+    "{{ .Enum.NodeAppend }}": node.append,
+    "{{ .Enum.NodeMove }}": node.move,
 };
 
 const goWired = {

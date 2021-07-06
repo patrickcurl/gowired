@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/net/html/atom"
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 const ComponentIdAttrKey = "go-wired-component-id"
@@ -91,7 +91,7 @@ func (w *WiredComponent) Create(life *ComponentLifeCycle) error {
 	w.Name = w.createUniqueName()
 
 	// Get the template defined on Component
-	ts := w.component.TemplateHandler(l)
+	ts := w.component.TemplateHandler(w)
 
 	// Prepare the template content adding
 	// gowired specific
@@ -116,7 +116,7 @@ func (w *WiredComponent) Create(life *ComponentLifeCycle) error {
 	})
 
 	// Calling Component creation
-	w.component.Create(l)
+	w.component.Create(w)
 
 	// Creating children
 	err = w.createChildren()
@@ -178,7 +178,7 @@ func (w *WiredComponent) Mount() error {
 
 	w.notifyStage(WillMount)
 
-	w.component.BeforeMount(l)
+	w.component.BeforeMount(w)
 
 	err := w.MountChildren()
 
@@ -186,7 +186,7 @@ func (w *WiredComponent) Mount() error {
 		return fmt.Errorf("mount children: %w", err)
 	}
 
-	w.component.Mounted(l)
+	w.component.Mounted(w)
 
 	w.IsMounted = true
 
@@ -240,7 +240,7 @@ func (w *WiredComponent) RenderChild(fn reflect.Value, _ ...reflect.Value) templ
 // WiredRender render a new version of the Component, and detect
 // differences from the last render
 // and sets the "new old" version  of render
-func (w *WiredComponent) WiredRender() (*diff, error) {
+func (w *WiredComponent) WiredRender() (*patches, error) {
 	return w.renderer.WiredRender(w.component)
 }
 

@@ -24,15 +24,15 @@ func (t *Task) GetClasses() string {
 }
 
 type Todo struct {
-	gowired.LiveComponentWrapper
+	gowired.WiredComponentWrapper
 	Counter int
 	Text    string
 	Tasks   []Task
 	Name    string
 }
 
-func NewTodo() *gowired.LiveComponent {
-	return gowired.NewLiveComponent("Todo", &Todo{
+func NewTodo() *gowired.WiredComponent {
+	return gowired.NewWiredComponent("Todo", &Todo{
 		Counter: 0,
 		Name:    "Todo",
 		Text:    "",
@@ -75,7 +75,7 @@ func (t *Todo) CanAdd() bool {
 	return len(t.Text) > 0
 }
 
-func (t *Todo) TemplateHandler(_ *gowired.LiveComponent) string {
+func (t *Todo) TemplateHandler(_ *gowired.WiredComponent) string {
 	return `
 		<div id="todo">
 			<input go-wired-input="Text" />

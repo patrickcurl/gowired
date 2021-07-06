@@ -7,12 +7,12 @@ import (
 )
 
 type Clock struct {
-	gowired.LiveComponentWrapper
+	gowired.WiredComponentWrapper
 	ActualTime string
 }
 
-func NewClock() *gowired.LiveComponent {
-	return gowired.NewLiveComponent("Clock", &Clock{
+func NewClock() *gowired.WiredComponent {
+	return gowired.NewWiredComponent("Clock", &Clock{
 		ActualTime: formattedActualTime(),
 	})
 }
@@ -21,7 +21,7 @@ func formattedActualTime() string {
 	return time.Now().Format(time.RFC3339Nano)
 }
 
-func (c *Clock) Mounted(l *gowired.LiveComponent) {
+func (c *Clock) Mounted(l *gowired.WiredComponent) {
 	go func() {
 		for {
 			if l.Exited {
@@ -34,7 +34,7 @@ func (c *Clock) Mounted(l *gowired.LiveComponent) {
 	}()
 }
 
-func (c *Clock) TemplateHandler(_ *gowired.LiveComponent) string {
+func (c *Clock) TemplateHandler(_ *gowired.WiredComponent) string {
 	return `
 		<div>
 			<span>Time: {{ .ActualTime }}</span>

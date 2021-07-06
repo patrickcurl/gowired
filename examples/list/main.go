@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/patrickcurl/gowired"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
+	"github.com/patrickcurl/gowired"
 )
 
 type Writer string
@@ -22,7 +22,7 @@ type BooksFilter struct {
 }
 
 type Books struct {
-	gowired.LiveComponentWrapper
+	gowired.WiredComponentWrapper
 	Filter BooksFilter
 	List   []Book
 }
@@ -54,8 +54,8 @@ func NewBooks() *Books {
 	}
 }
 
-func NewBooksComponent() *gowired.LiveComponent {
-	return gowired.NewLiveComponent("Books", NewBooks())
+func NewBooksComponent() *gowired.WiredComponent {
+	return gowired.NewWiredComponent("Books", NewBooks())
 }
 func (b *Books) GetFilteredList() []Book {
 	filtered := make([]Book, 0)
@@ -99,7 +99,7 @@ book:
 	return writers
 }
 
-func (b *Books) TemplateHandler(_ *gowired.LiveComponent) string {
+func (b *Books) TemplateHandler(_ *gowired.WiredComponent) string {
 	return `
 		<div>
 			<select go-wired-input="Filter.Writer">

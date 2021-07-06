@@ -107,7 +107,7 @@ func (session *Session) ActivatePage(lp *Page) {
 				session.QueueMessage(PatchBrowser{
 					ComponentID:  evt.Component.Name,
 					Type:         EventWiredConnectElement,
-					Instructions: nil,
+					Changes: nil,
 				})
 				break
 			}
@@ -115,11 +115,11 @@ func (session *Session) ActivatePage(lp *Page) {
 	}()
 }
 
-func (session *Session) generateBrowserPatchesFromDiff(diff *diff, source *EventSource) ([]*PatchBrowser, error) {
+func (session *Session) generateBrowserPatchesFromDiff(patches *patches, source *EventSource) ([]*PatchBrowser, error) {
 
 	patchedBrowser := make([]*PatchBrowser, 0)
 
-	for _, patched := range diff.patches {
+	for _, patched := range patches.updates{
 
 		selector, err := selectorFromNode(patched.element)
 		if skipUpdateValueOnInput(patched, source) {
@@ -153,7 +153,7 @@ func (session *Session) generateBrowserPatchesFromDiff(diff *diff, source *Event
 			patchedBrowser = append(patchedBrowser, patch)
 		}
 
-		patch.patchNode(PatchedNode{
+		patch.appendChange(Change{
 			Name: EventWiredDom,
 			Type: patched.changeType.toString(),
 			Attr: map[string]string{
@@ -168,8 +168,8 @@ func (session *Session) generateBrowserPatchesFromDiff(diff *diff, source *Event
 	return patchedBrowser, nil
 }
 
-func skipUpdateValueOnInput(updated updateInstruction, source *EventSource) bool {
-	if updated.element == nil || source == nil || updated.updateType != SetAttr || strings.ToLower(updated.attr.name) != "value" {
+func skipUpdateValueOnInput(updated node, source *EventSource) bool {
+	if updated.element == nil || source == nil || updated.changeType != SetAttr || strings.ToLower(updated.attr.name) != "value" {
 		return false
 	}
 
@@ -183,13 +183,13 @@ func skipUpdateValueOnInput(updated updateInstruction, source *EventSource) bool
 func (s *Session) WiredRenderComponent(c *WiredComponent, source *EventSource) error {
 	var err error
 
-	diff, err := c.WiredRender()
+	patch, err := c.WiredRender()
 
 	if err != nil {
 		return err
 	}
 
-	patches, err := s.generateBrowserPatchesFromDiff(diff, source)
+	patches, err := s.generateBrowserPatchesFromDiff(patch, source)
 
 	if err != nil {
 		return err

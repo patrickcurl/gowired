@@ -3,17 +3,17 @@ package components
 import "github.com/patrickcurl/gowired"
 
 type DynamicInput struct {
-	gowired.LiveComponentWrapper
+	gowired.WiredComponentWrapper
 	Label string
 }
 
-func NewDynamicInput() *gowired.LiveComponent {
-	return gowired.NewLiveComponent("DynamicInput", &DynamicInput{
+func NewDynamicInput() *gowired.WiredComponent {
+	return gowired.NewWiredComponent("DynamicInput", &DynamicInput{
 		Label: "",
 	})
 }
 
-func (d *DynamicInput) TemplateHandler(_ *gowired.LiveComponent) string {
+func (d *DynamicInput) TemplateHandler(_ *gowired.WiredComponent) string {
 	return `
 		<div>
 			<input type="string" go-wired-input="Label" />

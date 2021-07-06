@@ -1,6 +1,6 @@
 package gowired
 
-type PatchInstruction struct {
+type Change struct {
 	Name     string      `json:"n"`
 	Type     string      `json:"t"`
 	Attr     interface{} `json:"a,omitempty"`
@@ -13,23 +13,23 @@ type PatchNodeChildren map[int]*PatchTreeNode
 
 type PatchTreeNode struct {
 	Children    PatchNodeChildren  `json:"c,omitempty"`
-	Instruction []PatchInstruction `json:"i"`
+	Changes []Change `json:"i"`
 }
 
 type PatchBrowser struct {
 	ComponentID  string             `json:"cid,omitempty"`
 	Type         string             `json:"t"`
 	Message      string             `json:"m"`
-	Instructions []PatchInstruction `json:"i,omitempty"`
+	Changes []Change `json:"i,omitempty"`
 }
 
 func NewPatchBrowser(componentID string) *PatchBrowser {
 	return &PatchBrowser{
 		ComponentID:  componentID,
-		Instructions: make([]PatchInstruction, 0),
+		Changes: make([]Change, 0),
 	}
 }
 
-func (pb *PatchBrowser) AddInstruction(pi PatchInstruction) {
-	pb.Instructions = append(pb.Instructions, pi)
+func (pb *PatchBrowser) appendChange(pi Change) {
+	pb.Changes = append(pb.Changes, pi)
 }
